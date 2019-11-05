@@ -2,6 +2,8 @@
 This is a library for playing audio through external DAC on the ESP32. It is based on bitluni's [VGA Project](https://github.com/bitluni/ESP32Lib). Link to [audio sample editor](https://bitluni.net/wp-content/uploads/2018/03/WavetableEditor.html).
 
 # Features
+- Low cpu usage using dma transfer
+
 - Play multiple audio samples concurrently
 
 - Change volume of audio samples individually
