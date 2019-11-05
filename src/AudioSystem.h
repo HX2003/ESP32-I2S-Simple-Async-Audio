@@ -239,18 +239,18 @@ class Wavetable
       AudioSystem.stopBySample(&samples[offsets[i]]);
   }
   void volume(AudioSystem &AudioSystem, int soundNumber, float amplitude){
-      AudioSystem.volBySample(&samples[offsets[soundNumber]],amplitude);
+      AudioSystem.volBySample(&samples[offsets[soundNumber]], amplitude * 256);
   }
   void volume(AudioSystem &AudioSystem, float amplitude){
 	for(int i = 0; i < soundCount; i++)
-      AudioSystem.volBySample(&samples[offsets[i]],amplitude);
+      AudioSystem.volBySample(&samples[offsets[i]], amplitude * 256);
   }
   /*void volume(AudioSystem &AudioSystem, int id, float amplitude){
-      AudioSystem.volumeA(id,`);
+      AudioSystem.volumeA(id, amplitude * 256);
   }
   void volume(AudioSystem &AudioSystem){
 	for(int i = 0; i < soundCount; i++)
-      AudioSystem.volumeA(i,amplitude);
+      AudioSystem.volumeA(i, amplitude * 256);
   }
   */
 };
