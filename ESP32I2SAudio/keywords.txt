@@ -1,0 +1,21 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+AudioOutput	KEYWORD1
+AudioSystem	KEYWORD1
+
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+init KEYWORD2
+configPin KEYWORD2
+volume KEYWORD2
+stop KEYWORD2
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+#yourLITERAL	LITERAL1
