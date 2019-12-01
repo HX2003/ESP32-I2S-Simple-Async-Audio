@@ -12,8 +12,9 @@ AudioSystem	KEYWORD1
 
 init KEYWORD2
 configPin KEYWORD2
-volume KEYWORD2
 stop KEYWORD2
+play KEYOWRD2
+volume KEYWORD2
 #######################################
 # Constants (LITERAL1)
 #######################################
