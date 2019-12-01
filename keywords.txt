@@ -2,8 +2,9 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-AudioOutput	KEYWORD1
-AudioSystem	KEYWORD1
+ESP32I2SAudio KEYWORD1
+AudioOutput KEYWORD1
+AudioSystem KEYWORD1
 
 
 #######################################
