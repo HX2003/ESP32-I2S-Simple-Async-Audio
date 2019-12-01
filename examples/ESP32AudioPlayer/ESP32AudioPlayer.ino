@@ -17,7 +17,7 @@ AudioOutput audioOutput;
 //soundsamples.stop(AudioSystem &AudioSystem, int soundNumber) //Stops a sound with specified soundNumber
 //soundsamples.stop(AudioSystem &AudioSystem )//Stops all sounds
 //soundsamples.volume(AudioSystem &AudioSystem, int soundNumber, float amplitude) //Set volume of a sound with specified soundNumber
-//soundsamples.volume(AudioSystem &AudioSystem, float amplitude) //Set indivual volumes of all sounds
+//soundsamples.volume(AudioSystem &AudioSystem, float amplitude) //Set individual volumes of all sounds
 void setup()
 {
   Serial.begin(115200);

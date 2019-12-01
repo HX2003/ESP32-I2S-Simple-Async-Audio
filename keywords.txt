@@ -6,7 +6,6 @@ ESP32I2SAudio KEYWORD1
 AudioOutput KEYWORD1
 AudioSystem KEYWORD1
 
-
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
