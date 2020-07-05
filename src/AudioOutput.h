@@ -19,6 +19,9 @@
 #include "driver/i2s.h"
 
 #include "Log.h"
+
+#define I2S_INTERNAL_DAC 0
+#define I2S_EXTERNAL_DAC 1
 class AudioOutput;
 void IRAM_ATTR timerInterrupt(AudioOutput *audioOutput);
 
@@ -30,6 +33,7 @@ class AudioOutput
     uint8_t BCLK = 26;
     uint8_t LRCK = 25;
     uint8_t DOUT = 27;
+	uint8_t I2S_MODE = I2S_EXTERNAL_DAC;
   public:
     AudioSystem *audioSystem;
 
@@ -38,31 +42,58 @@ class AudioOutput
       this->LRCK = LRCK;
       this->DOUT = DOUT;
     }
+	void configPin() {
+      this->I2S_MODE = I2S_INTERNAL_DAC;
+    }
     void init(AudioSystem &audioSystem)
     {
       this->audioSystem = &audioSystem;
+	  bool use_apll = false;
+      esp_chip_info_t out_info;
+      esp_chip_info(&out_info);
+      if(out_info.revision > 0) {
+        use_apll = false;
+      }
+	  
+	  i2s_mode_t mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);
+	  if(this->I2S_MODE==I2S_INTERNAL_DAC){
+		mode = (i2s_mode_t)(mode | I2S_MODE_DAC_BUILT_IN);
+	  }
+	  
+	  i2s_comm_format_t comm_format;
+
+	  if(this->I2S_MODE==I2S_INTERNAL_DAC){
+		comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S_MSB);
+	  }else{
+		comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB);
+	  }
       //CONFIGURE I2S
       i2s_config_t i2s_config = {
-        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+        .mode = mode,
         .sample_rate = 22050,//must be above ~6000
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
         .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT, //I2S_CHANNEL_FMT_RIGHT_LEFT,
-        .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
+        .communication_format = comm_format,
         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1, // high interrupt priority
         .dma_buf_count = audioSystem.bufferCount,  // max buffers
         .dma_buf_len = audioSystem.bufferSize, // max value
-        .use_apll  =  true
+        .use_apll  = use_apll
       };
 	  //NOTE total memory usage = dma_buf_count*dma_buf_len*sizeof(uint16_t)
       i2s_driver_install((i2s_port_t)i2s_num, &i2s_config, 0, NULL);
-
-      i2s_pin_config_t pin_config = {
-        .bck_io_num = this->BCLK,
-        .ws_io_num =  this->LRCK,
-        .data_out_num = this->DOUT,
-        .data_in_num = I2S_PIN_NO_CHANGE
-      };
-      i2s_set_pin((i2s_port_t)i2s_num, &pin_config);
+		
+	  if(this->I2S_MODE==I2S_INTERNAL_DAC){
+		i2s_set_pin((i2s_port_t)i2s_num, NULL); 
+		i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
+	  }else{
+		i2s_pin_config_t pin_config = {
+			.bck_io_num = this->BCLK,
+			.ws_io_num =  this->LRCK,
+			.data_out_num = this->DOUT,
+			.data_in_num = I2S_PIN_NO_CHANGE
+		};
+		i2s_set_pin((i2s_port_t)i2s_num, &pin_config);
+	  }
       i2s_zero_dma_buffer((i2s_port_t)i2s_num);
       i2s_set_sample_rates((i2s_port_t)i2s_num, audioSystem.samplingRate);
 
@@ -115,13 +146,18 @@ class AudioOutput
        uint8_t* bufz = (uint8_t*)malloc(this->audioSystem->bufferSize*sizeof(uint8_t));
        if(!bufz)
 		ERROR("Not enough memory for audio buffer");
-		
-       for(int i = 0; i < this->audioSystem->bufferSize; i++){
-       unsigned char sample = this->audioSystem->nextSample();
-       bufz[i] = sample - 128;
-           //buf[i] = (uint16_t)sample<<8;
-          //bufz[i] = (((int16_t)(sample&0xff)) - 128) << 8;
-       } 
+	
+	   if(this->I2S_MODE==I2S_INTERNAL_DAC){
+		for(int i = 0; i < this->audioSystem->bufferSize; i++){
+		unsigned char sample = this->audioSystem->nextSample();
+		bufz[i] = sample;
+		} 
+	   }else{
+		for(int i = 0; i < this->audioSystem->bufferSize; i++){
+		unsigned char sample = this->audioSystem->nextSample();
+		bufz[i] = sample - 128;   
+		}
+	   }
 	   /*
         for(int i = 0; i < this->audioSystem->bufferSize; i++){
         size_t m_bytesWritten;
@@ -131,8 +167,7 @@ class AudioOutput
 	   */
       size_t m_bytesWritten;
       esp_err_t err = i2s_write_expand((i2s_port_t)i2s_num,(const char*)bufz, this->audioSystem->bufferSize*sizeof(uint8_t), 8, 16, &m_bytesWritten, portMAX_DELAY);
-      
-	  if(m_bytesWritten < this->audioSystem->bufferSize){
+      if(m_bytesWritten < this->audioSystem->bufferSize){
          DEBUG_PRINTLN("Buffer full");
       }
       free(bufz);

@@ -148,6 +148,10 @@ class AudioSystem
       readPosition = 0;
     return s;
   }
+  //set global_volume
+  void global_volume(float amplitude){
+	volume = 256 * amplitude; 
+  }
   //set volume
   void volBySample(const signed char *samples, float amplitude)
   {
