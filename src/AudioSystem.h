@@ -21,7 +21,7 @@ class Sound
   int sampleCount;
   long long position;
   int positionIncrement;
-  float volume;
+  int volume;
   bool playing;
   int id;
   bool loop;
@@ -39,7 +39,7 @@ class Sound
     *prevNext = this;
   }
   void volume_S(float amplitude){
-    this->volume = amplitude;
+    this->volume = 256 * amplitude;
   }
   void init(const signed char *samples, int sampleCount, float volume = 1, float speed = 1, bool loop = false)
   {
@@ -120,18 +120,21 @@ class AudioSystem
     {
       int sample = 0;
       Sound **soundp = &sounds;
+ 
       while(*soundp)
-      {
+      {	
         sample += (*soundp)->nextSample();
         if(!(*soundp)->playing)
           (*soundp)->remove(soundp);
         else
           soundp = &(*soundp)->next;
       }
+ 
       if(sample >= (1 << 15)) 
         sample = (1 << 15) - 1;
       else if(sample < -(1 << 15)) 
         sample = -(1 << 15);
+	
       sample = ((sample * volume) >> 16) + 128;
       buffer[writePosition] = sample;
       writePosition++;

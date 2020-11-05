@@ -10,9 +10,10 @@ This is a library for playing audio through external/internal DAC on the ESP32. 
 
 - Change volume of audio samples individually
 
-| Tested on     | 
-| ------------- | 
-| PCM5102a      | 
+| Tested on                 | 
+| ------------------------- | 
+| PCM5102a                  |
+| TAS5825M (with I2C setup) | 
 
 # Limitations
 × Only 8bit mono samples

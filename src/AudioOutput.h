@@ -65,12 +65,13 @@ class AudioOutput
 	  if(this->I2S_MODE==I2S_INTERNAL_DAC){
 		comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S_MSB);
 	  }else{
-		comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB);
+		comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_STAND_I2S);
 	  }
+	 
       //CONFIGURE I2S
       i2s_config_t i2s_config = {
         .mode = mode,
-        .sample_rate = 22050,//must be above ~6000
+        .sample_rate = 48000,//must be above ~6000
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
         .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT, //I2S_CHANNEL_FMT_RIGHT_LEFT,
         .communication_format = comm_format,
@@ -114,8 +115,8 @@ class AudioOutput
       //CONFIGURE TIMER
       
       timer_config_t config;
-      config.alarm_en = 1;
-      config.auto_reload = 1;
+      config.alarm_en = TIMER_ALARM_EN;
+      config.auto_reload = TIMER_AUTORELOAD_EN;
       config.counter_dir = TIMER_COUNT_UP;
       config.divider = 80;
       config.intr_type = TIMER_INTR_LEVEL;
