@@ -20,8 +20,11 @@
 
 #include "Log.h"
 
-#define I2S_INTERNAL_DAC 0
-#define I2S_EXTERNAL_DAC 1
+typedef enum {
+	I2S_INTERNAL_DAC,
+	I2S_EXTERNAL_DAC
+}i2s_audio_output_type_t;
+
 class AudioOutput;
 void IRAM_ATTR timerInterrupt(AudioOutput *audioOutput);
 
@@ -48,25 +51,32 @@ class AudioOutput
     void init(AudioSystem &audioSystem)
     {
       this->audioSystem = &audioSystem;
-	  bool use_apll = false;
+	  bool use_apll = true;
+	  
+	  #ifdef CONFIG_IDF_TARGET_ESP32
       esp_chip_info_t out_info;
       esp_chip_info(&out_info);
       if(out_info.revision > 0) {
         use_apll = false;
       }
+	  #endif
 	  
 	  i2s_mode_t mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);
 	  if(this->I2S_MODE==I2S_INTERNAL_DAC){
+		#ifdef CONFIG_IDF_TARGET_ESP32
 		mode = (i2s_mode_t)(mode | I2S_MODE_DAC_BUILT_IN);
+		#else
+		//ERROR, DAC not supported on esp32s2 for now
+		#endif
 	  }
 	  
 	  i2s_comm_format_t comm_format;
 
-	  if(this->I2S_MODE==I2S_INTERNAL_DAC){
-		comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S_MSB);
-	  }else{
+	  //if(this->I2S_MODE==I2S_INTERNAL_DAC){
+	  //	comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_STAND_I2S);
+	  //}else{
 		comm_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_STAND_I2S);
-	  }
+	  //}
 	 
       //CONFIGURE I2S
       i2s_config_t i2s_config = {
@@ -84,8 +94,12 @@ class AudioOutput
       i2s_driver_install((i2s_port_t)i2s_num, &i2s_config, 0, NULL);
 		
 	  if(this->I2S_MODE==I2S_INTERNAL_DAC){
+		#ifdef CONFIG_IDF_TARGET_ESP32
 		i2s_set_pin((i2s_port_t)i2s_num, NULL); 
 		i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
+		#else
+		//ERROR, DAC not supported on esp32s2 for now
+		#endif
 	  }else{
 		i2s_pin_config_t pin_config = {
 			.bck_io_num = this->BCLK,
@@ -186,15 +200,26 @@ class AudioOutput
 };
 
 void IRAM_ATTR timerInterrupt(AudioOutput *audioOutput)
-{
+{ 
+  #ifdef CONFIG_IDF_TARGET_ESP32
   uint32_t intStatus = TIMERG0.int_st_timers.val;
   if (intStatus & BIT(TIMER_0))
   {
-    TIMERG0.hw_timer[TIMER_0].update = 1;
+	TIMERG0.hw_timer[TIMER_0].update = 1;
     TIMERG0.int_clr_timers.t0 = 1;
     TIMERG0.hw_timer[TIMER_0].config.alarm_en = 1;
     audioOutput->giveSemaphore();
   }
+  #else
+  uint32_t intStatus = TIMERG0.int_st.val;
+  if (intStatus & BIT(TIMER_0))
+  {
+    TIMERG0.hw_timer[TIMER_0].update.val = 1;
+    TIMERG0.int_clr.t0 = 1;
+    TIMERG0.hw_timer[TIMER_0].config.alarm_en = 1;
+    audioOutput->giveSemaphore();
+  }
+  #endif
 }
 
 
