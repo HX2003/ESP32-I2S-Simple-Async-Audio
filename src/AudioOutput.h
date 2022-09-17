@@ -206,17 +206,17 @@ void IRAM_ATTR timerInterrupt(AudioOutput *audioOutput)
   if (intStatus & BIT(TIMER_0))
   {
 	TIMERG0.hw_timer[TIMER_0].update = 1;
-    TIMERG0.int_clr_timers.t0 = 1;
-    TIMERG0.hw_timer[TIMER_0].config.alarm_en = 1;
+    TIMERG0.int_clr_timers.t0_int_clr = 1;
+    TIMERG0.hw_timer[TIMER_0].config.tx_alarm_en = 1;
     audioOutput->giveSemaphore();
   }
   #else
-  uint32_t intStatus = TIMERG0.int_st.val;
+  uint32_t intStatus = TIMERG0.int_st_timers.val;
   if (intStatus & BIT(TIMER_0))
   {
     TIMERG0.hw_timer[TIMER_0].update.val = 1;
-    TIMERG0.int_clr.t0 = 1;
-    TIMERG0.hw_timer[TIMER_0].config.alarm_en = 1;
+    TIMERG0.int_clr_timers.t0_int_clr = 1;
+    TIMERG0.hw_timer[TIMER_0].config.tx_alarm_en = 1;
     audioOutput->giveSemaphore();
   }
   #endif
